@@ -209,7 +209,7 @@ function PlaylistCard({
   onSelect: ((playlist: SpotifyPlaylist) => void) | null
 }) {
   const cover = playlist.images?.[0]
-  const trackCount = playlist.tracks?.total
+  const trackCount = playlist.items?.total ?? playlist.tracks?.total
   const ownerName = playlist.owner?.display_name
   const clickable = onSelect !== null
 

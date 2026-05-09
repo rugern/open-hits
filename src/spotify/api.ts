@@ -13,13 +13,16 @@ export interface SpotifyImage {
 }
 
 // Fields are tolerant of partial responses — Spotify occasionally returns
-// playlist entries missing tracks, images, or owner.display_name.
+// playlist entries missing fields, images, or owner.display_name.
+// `items.total` is the current field for playlist length; `tracks.total` is
+// the legacy alias and may not be populated on newer responses.
 export interface SpotifyPlaylist {
   id: string
   name: string
   description: string | null
   images: SpotifyImage[] | null
   owner: { id: string; display_name: string | null } | null
+  items: { total: number } | null
   tracks: { total: number } | null
   public: boolean | null
   collaborative: boolean
