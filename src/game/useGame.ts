@@ -5,6 +5,7 @@ import { pickCategoryIndex, pickSpinDurationMs } from './wheel'
 
 export type GameState =
   | { kind: 'ready' }
+  | { kind: 'awaiting-spin' }
   | { kind: 'spinning'; categoryIndex: number; durationMs: number }
   | { kind: 'playing'; categoryIndex: number; track: GameTrack }
   | { kind: 'revealing'; categoryIndex: number; track: GameTrack }
@@ -18,6 +19,7 @@ interface InternalState {
 
 type Action =
   | { type: 'start' }
+  | { type: 'spin_now' }
   | { type: 'spin_complete' }
   | { type: 'reveal' }
   | { type: 'continue' }
@@ -27,6 +29,10 @@ function reducer(s: InternalState, action: Action): InternalState {
   switch (action.type) {
     case 'start': {
       if (s.game.kind !== 'ready') return s
+      return { ...s, game: { kind: 'awaiting-spin' } }
+    }
+    case 'spin_now': {
+      if (s.game.kind !== 'awaiting-spin') return s
       return {
         ...s,
         game: {
@@ -65,11 +71,7 @@ function reducer(s: InternalState, action: Action): InternalState {
       return {
         ...s,
         index: nextIndex,
-        game: {
-          kind: 'spinning',
-          categoryIndex: pickCategoryIndex(),
-          durationMs: pickSpinDurationMs(),
-        },
+        game: { kind: 'awaiting-spin' },
       }
     }
     case 'restart': {
@@ -87,6 +89,7 @@ export interface UseGame {
   totalTracks: number
   roundNumber: number
   startGame: () => void
+  spinNow: () => void
   onSpinComplete: () => void
   reveal: () => void
   continueRound: () => void
@@ -109,6 +112,7 @@ export function useGame(initialTracks: GameTrack[]): UseGame {
     totalTracks: s.tracks.length,
     roundNumber: s.index + 1,
     startGame: () => dispatch({ type: 'start' }),
+    spinNow: () => dispatch({ type: 'spin_now' }),
     onSpinComplete: () => dispatch({ type: 'spin_complete' }),
     reveal: () => dispatch({ type: 'reveal' }),
     continueRound: () => dispatch({ type: 'continue' }),

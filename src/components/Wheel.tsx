@@ -42,15 +42,23 @@ function rotationForSegment(currentRotation: number, segmentIndex: number): numb
 }
 
 interface WheelProps {
-  targetIndex: number
+  // null = stationary (clickable, awaiting user); number = animate to that segment
+  targetIndex: number | null
   durationMs: number
-  onSpinComplete: () => void
+  onClick?: () => void
+  onSpinComplete?: () => void
 }
 
-export function Wheel({ targetIndex, durationMs, onSpinComplete }: WheelProps) {
+export function Wheel({
+  targetIndex,
+  durationMs,
+  onClick,
+  onSpinComplete,
+}: WheelProps) {
   const [rotation, setRotation] = useState(0)
 
   useEffect(() => {
+    if (targetIndex === null) return
     // RAF defers the rotation change to a frame after the initial commit so the
     // CSS transition has a stable starting value to interpolate from.
     const handle = requestAnimationFrame(() => {
@@ -58,6 +66,9 @@ export function Wheel({ targetIndex, durationMs, onSpinComplete }: WheelProps) {
     })
     return () => cancelAnimationFrame(handle)
   }, [targetIndex])
+
+  const isAnimating = targetIndex !== null
+  const isClickable = !isAnimating && onClick !== undefined
 
   return (
     <div className="relative mx-auto h-80 w-80">
@@ -72,12 +83,32 @@ export function Wheel({ targetIndex, durationMs, onSpinComplete }: WheelProps) {
       />
       <svg
         viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE}`}
-        className="h-full w-full drop-shadow-2xl"
+        role={isClickable ? 'button' : undefined}
+        tabIndex={isClickable ? 0 : undefined}
+        onClick={isClickable ? onClick : undefined}
+        onKeyDown={
+          isClickable
+            ? (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  onClick?.()
+                }
+              }
+            : undefined
+        }
+        className={
+          'h-full w-full drop-shadow-2xl outline-none ' +
+          (isClickable
+            ? 'cursor-pointer focus-visible:[filter:drop-shadow(0_0_12px_rgb(16_185_129/0.6))]'
+            : '')
+        }
         style={{
           transform: `rotate(${rotation}deg)`,
-          transition: `transform ${durationMs}ms cubic-bezier(0.18, 0.74, 0.24, 1)`,
+          transition: isAnimating
+            ? `transform ${durationMs}ms cubic-bezier(0.18, 0.74, 0.24, 1)`
+            : 'none',
         }}
-        onTransitionEnd={onSpinComplete}
+        onTransitionEnd={isAnimating ? onSpinComplete : undefined}
       >
         {WHEEL_CATEGORIES.map((cat, i) => {
           const [lx, ly] = polar(i * SEGMENT_ANGLE, LABEL_RADIUS)

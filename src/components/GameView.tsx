@@ -109,12 +109,20 @@ function Game({
           />
         )}
 
-        {game.state.kind === 'spinning' && (
-          <SpinningView
-            targetIndex={game.state.categoryIndex}
-            durationMs={game.state.durationMs}
+        {(game.state.kind === 'awaiting-spin' ||
+          game.state.kind === 'spinning') && (
+          <RoundView
+            targetIndex={
+              game.state.kind === 'spinning'
+                ? game.state.categoryIndex
+                : null
+            }
+            durationMs={
+              game.state.kind === 'spinning' ? game.state.durationMs : 0
+            }
             roundNumber={game.roundNumber}
             totalTracks={game.totalTracks}
+            onSpinNow={game.spinNow}
             onSpinComplete={game.onSpinComplete}
           />
         )}
@@ -244,8 +252,8 @@ function ReadyView({
       </div>
 
       <p className="mx-auto mt-6 max-w-md rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
-        Heads up: the Spotify app on the device above will display the song's title,
-        artist and album art. Keep that screen out of sight during play.
+        Heads up: The Spotify app on the device above will display the song's title,
+        artist and album art. Keep that screen out of sight during play!
       </p>
 
       <button
@@ -323,19 +331,22 @@ function DevicePicker({
   )
 }
 
-function SpinningView({
+function RoundView({
   targetIndex,
   durationMs,
   roundNumber,
   totalTracks,
+  onSpinNow,
   onSpinComplete,
 }: {
-  targetIndex: number
+  targetIndex: number | null
   durationMs: number
   roundNumber: number
   totalTracks: number
+  onSpinNow: () => void
   onSpinComplete: () => void
 }) {
+  const isAwaiting = targetIndex === null
   return (
     <div className="text-center">
       <RoundCounter roundNumber={roundNumber} totalTracks={totalTracks} />
@@ -343,10 +354,10 @@ function SpinningView({
         <Wheel
           targetIndex={targetIndex}
           durationMs={durationMs}
+          onClick={isAwaiting ? onSpinNow : undefined}
           onSpinComplete={onSpinComplete}
         />
       </div>
-      <p className="mt-6 text-slate-400">Spinning…</p>
     </div>
   )
 }
