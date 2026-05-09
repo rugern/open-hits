@@ -125,11 +125,6 @@ function SignedInView({
         }
       : playlists
 
-  const hiddenCount =
-    playlists.status === 'loaded'
-      ? playlists.playlists.length - playable.playlists.length
-      : 0
-
   if (selected) {
     return (
       <GameView
@@ -168,13 +163,10 @@ function SignedInView({
             <PlaylistFilter value={filter} onChange={setFilter} />
           )}
         </div>
-        {hiddenCount > 0 && (
-          <p className="mt-2 text-xs text-slate-500">
-            {hiddenCount} Spotify-curated playlist
-            {hiddenCount === 1 ? '' : 's'} hidden — those aren't accessible to
-            apps in Development Mode.
-          </p>
-        )}
+        <p className="mt-2 text-xs text-slate-500">
+          Official Spotify playlists (Discover Weekly, editorial picks)
+          aren't supported
+        </p>
         <PlaylistsList
           state={playable}
           filter={filter}
