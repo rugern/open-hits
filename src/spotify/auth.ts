@@ -79,7 +79,20 @@ export interface CallbackResult {
   error?: string
 }
 
-export async function handleAuthCallback(): Promise<CallbackResult | null> {
+// Module-level dedup so that React StrictMode's mount→unmount→remount in dev
+// (which calls the auth-init effect twice) doesn't end up with one invocation
+// consuming the URL params and the other one seeing nothing. Both calls share
+// the same in-flight promise and observe the same result.
+let callbackPromise: Promise<CallbackResult | null> | null = null
+
+export function handleAuthCallback(): Promise<CallbackResult | null> {
+  if (!callbackPromise) {
+    callbackPromise = handleAuthCallbackOnce()
+  }
+  return callbackPromise
+}
+
+async function handleAuthCallbackOnce(): Promise<CallbackResult | null> {
   const url = new URL(window.location.href)
   const error = url.searchParams.get('error')
   const code = url.searchParams.get('code')
