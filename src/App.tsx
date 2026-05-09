@@ -1,24 +1,34 @@
 import { useState } from 'react'
+import { Link, Route, Routes } from 'react-router-dom'
 import { useSpotifyAuth } from './spotify/useSpotifyAuth'
 import { usePlaylists } from './spotify/usePlaylists'
 import type { SpotifyPlaylist, SpotifyUser } from './spotify/api'
 import { GameView } from './components/GameView'
+import { JoinView } from './components/JoinView'
 
 function App() {
-  const auth = useSpotifyAuth()
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-slate-900 to-slate-950 text-slate-100">
-      {auth.status === 'authenticated' && auth.user ? (
-        <SignedInView user={auth.user} onLogout={auth.logout} />
-      ) : (
-        <CenteredHero
-          status={auth.status}
-          error={auth.error}
-          onLogin={auth.login}
-        />
-      )}
+      <Routes>
+        <Route path="/" element={<HomeRoute />} />
+        <Route path="/join" element={<JoinView />} />
+      </Routes>
     </div>
+  )
+}
+
+function HomeRoute() {
+  const auth = useSpotifyAuth()
+
+  if (auth.status === 'authenticated' && auth.user) {
+    return <SignedInView user={auth.user} onLogout={auth.logout} />
+  }
+  return (
+    <CenteredHero
+      status={auth.status}
+      error={auth.error}
+      onLogin={auth.login}
+    />
   )
 }
 
@@ -51,7 +61,7 @@ function CenteredHero({
             onClick={onLogin}
             className="mt-6 rounded-full bg-emerald-500 px-8 py-3 font-semibold text-slate-950 hover:bg-emerald-400"
           >
-            Connect Spotify
+            Start as host
           </button>
         </>
       )}
@@ -85,15 +95,25 @@ function LandingPitch({ onLogin }: { onLogin: () => void }) {
         </li>
       </ol>
 
-      <button
-        type="button"
-        onClick={onLogin}
-        className="mt-12 rounded-full bg-emerald-500 px-8 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400"
-      >
-        Connect Spotify
-      </button>
+      <div className="mt-12 flex flex-col items-center gap-3">
+        <button
+          type="button"
+          onClick={onLogin}
+          className="w-64 rounded-full bg-emerald-500 px-8 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400"
+        >
+          Start as host
+        </button>
+        <Link
+          to="/join"
+          className="w-64 rounded-full bg-emerald-500 px-8 py-3 text-center font-semibold text-slate-950 transition hover:bg-emerald-400"
+        >
+          Join game
+        </Link>
+      </div>
 
-      <p className="mt-4 text-xs text-slate-500">Spotify Premium required.</p>
+      <p className="mt-4 text-xs text-slate-500">
+        Spotify Premium required to host.
+      </p>
     </>
   )
 }
