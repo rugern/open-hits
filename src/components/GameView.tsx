@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchPlaylistTracks } from '../spotify/api'
 import type { GameTrack } from '../spotify/api'
 import { useGame } from '../game/useGame'
+import { useWakeLock } from '../game/useWakeLock'
 import { WHEEL_CATEGORIES } from '../game/wheel'
 import { usePlayback } from '../spotify/usePlayback'
 import type { SpotifyDevice } from '../spotify/playback'
@@ -89,6 +90,7 @@ function Game({
   const playback = usePlayback()
   const [playError, setPlayError] = useState<string | null>(null)
   const [partyMode, setPartyMode] = useState(false)
+  useWakeLock()
 
   useEffect(() => {
     if (game.state.kind !== 'playing') return
