@@ -101,8 +101,15 @@ function Game({
     })
   }, [game.state, playback.status, playback.play])
 
+  // Don't pause between rounds — iOS suspends Spotify when paused+backgrounded,
+  // dropping the device from Connect. Letting the previous track keep playing
+  // through the wheel spin keeps the device active until the next play() call
+  // replaces it. Only pause when the game ends.
+  useEffect(() => {
+    if (game.state.kind === 'done') void playback.pause()
+  }, [game.state.kind, playback.pause])
+
   const handleContinue = () => {
-    void playback.pause()
     game.continueRound()
   }
 
