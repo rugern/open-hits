@@ -388,11 +388,7 @@ function PlayingView({
       <p className="mt-8 text-slate-300">
         Listen, ponder, and decide on your guesses
       </p>
-      {playError && (
-        <p className="mt-4 text-sm text-rose-300">
-          Playback issue: {playError}
-        </p>
-      )}
+      {playError && <PlaybackError error={playError} />}
       <button
         type="button"
         onClick={onReveal}
@@ -402,6 +398,23 @@ function PlayingView({
       </button>
     </div>
   )
+}
+
+function PlaybackError({ error }: { error: string }) {
+  // Spotify returns reason="PREMIUM_REQUIRED" for free accounts; we also treat
+  // a bare 403 as Premium-related since that's overwhelmingly the cause.
+  const isPremium =
+    error.includes('PREMIUM_REQUIRED') || error === 'play_403'
+
+  if (isPremium) {
+    return (
+      <p className="mx-auto mt-6 max-w-md rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
+        Spotify Premium is required to play music through Connect. Sign out
+        and back in with a Premium account to use Open Hits.
+      </p>
+    )
+  }
+  return <p className="mt-4 text-sm text-rose-300">Playback issue: {error}</p>
 }
 
 function RevealingView({

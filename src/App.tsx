@@ -63,7 +63,7 @@ function LandingPitch({ onLogin }: { onLogin: () => void }) {
   return (
     <>
       <p className="mt-4 text-base italic text-emerald-300/80">
-        50% less engagement, 100% more luggage space!
+        50% less engagement, 100% more luggage space
       </p>
       <p className="mt-6 max-w-xl text-lg text-slate-300">
         A self-hosted music guessing game. Connect your Spotify, pick a playlist,
@@ -106,7 +106,6 @@ function SignedInView({
   onLogout: () => void
 }) {
   const playlists = usePlaylists()
-  const isPremium = user.product === 'premium'
   const [selected, setSelected] = useState<SpotifyPlaylist | null>(null)
   const [filter, setFilter] = useState('')
 
@@ -129,19 +128,7 @@ function SignedInView({
         <div className="flex items-center gap-4">
           <div className="text-right">
             <p className="text-xs text-slate-400">Signed in as</p>
-            <p className="text-sm font-semibold">
-              {user.display_name ?? user.id}
-              <span
-                className={
-                  'ml-2 rounded-full px-2 py-0.5 text-xs font-medium ' +
-                  (isPremium
-                    ? 'bg-emerald-500/20 text-emerald-300'
-                    : 'bg-amber-500/20 text-amber-300')
-                }
-              >
-                {isPremium ? 'Premium' : user.product}
-              </span>
-            </p>
+            <p className="text-sm font-semibold">{user.display_name ?? user.id}</p>
           </div>
           <button
             type="button"
@@ -153,18 +140,9 @@ function SignedInView({
         </div>
       </header>
 
-      {!isPremium && (
-        <p className="mt-6 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
-          Open Hits needs Spotify Premium to play music in the browser. You can
-          browse your playlists, but the game can't start without Premium.
-        </p>
-      )}
-
       <section className="mt-10">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold">
-            {isPremium ? 'Pick a playlist to play' : 'Your playlists'}
-          </h2>
+          <h2 className="text-xl font-semibold">Pick a playlist to play</h2>
           {playlists.status === 'loaded' && playlists.playlists.length > 0 && (
             <PlaylistFilter value={filter} onChange={setFilter} />
           )}
@@ -172,7 +150,7 @@ function SignedInView({
         <PlaylistsList
           state={playlists}
           filter={filter}
-          onSelect={isPremium ? setSelected : null}
+          onSelect={setSelected}
         />
       </section>
     </main>
@@ -186,7 +164,7 @@ function PlaylistsList({
 }: {
   state: ReturnType<typeof usePlaylists>
   filter: string
-  onSelect: ((playlist: SpotifyPlaylist) => void) | null
+  onSelect: (playlist: SpotifyPlaylist) => void
 }) {
   if (state.status === 'loading') {
     return <p className="mt-4 text-slate-400">Loading playlists…</p>
@@ -259,43 +237,11 @@ function PlaylistCard({
   onSelect,
 }: {
   playlist: SpotifyPlaylist
-  onSelect: ((playlist: SpotifyPlaylist) => void) | null
+  onSelect: (playlist: SpotifyPlaylist) => void
 }) {
   const cover = playlist.images?.[0]
   const trackCount = playlist.items?.total ?? playlist.tracks?.total
   const ownerName = playlist.owner?.display_name
-  const clickable = onSelect !== null
-
-  const content = (
-    <>
-      {cover ? (
-        <img
-          src={cover.url}
-          alt=""
-          className="h-16 w-16 shrink-0 rounded object-cover"
-        />
-      ) : (
-        <div className="h-16 w-16 shrink-0 rounded bg-slate-800" />
-      )}
-      <div className="min-w-0 flex-1 text-left">
-        <p className="truncate font-semibold">{playlist.name}</p>
-        <p className="truncate text-sm text-slate-400">
-          {trackCount !== undefined
-            ? `${trackCount} ${trackCount === 1 ? 'track' : 'tracks'}`
-            : '— tracks'}
-          {ownerName ? ` · ${ownerName}` : ''}
-        </p>
-      </div>
-    </>
-  )
-
-  if (!clickable) {
-    return (
-      <li className="flex gap-4 rounded-xl border border-slate-800 bg-slate-900/40 p-3 opacity-60">
-        {content}
-      </li>
-    )
-  }
 
   return (
     <li>
@@ -304,7 +250,24 @@ function PlaylistCard({
         onClick={() => onSelect(playlist)}
         className="flex w-full gap-4 rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-left transition hover:border-emerald-500 hover:bg-slate-900 focus:border-emerald-500 focus:outline-none"
       >
-        {content}
+        {cover ? (
+          <img
+            src={cover.url}
+            alt=""
+            className="h-16 w-16 shrink-0 rounded object-cover"
+          />
+        ) : (
+          <div className="h-16 w-16 shrink-0 rounded bg-slate-800" />
+        )}
+        <div className="min-w-0 flex-1 text-left">
+          <p className="truncate font-semibold">{playlist.name}</p>
+          <p className="truncate text-sm text-slate-400">
+            {trackCount !== undefined
+              ? `${trackCount} ${trackCount === 1 ? 'track' : 'tracks'}`
+              : '— tracks'}
+            {ownerName ? ` · ${ownerName}` : ''}
+          </p>
+        </div>
       </button>
     </li>
   )

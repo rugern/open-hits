@@ -42,7 +42,18 @@ export async function playTrack(deviceId: string, uri: string): Promise<void> {
       body: JSON.stringify({ uris: [uri] }),
     },
   )
-  if (!res.ok) throw new Error(`play_${res.status}`)
+  if (!res.ok) {
+    let reason = ''
+    try {
+      const body = (await res.json()) as {
+        error?: { reason?: string; message?: string }
+      }
+      reason = body.error?.reason ?? body.error?.message ?? ''
+    } catch {
+      // Body wasn't JSON; nothing useful to add.
+    }
+    throw new Error(`play_${res.status}${reason ? `:${reason}` : ''}`)
+  }
 }
 
 export async function pausePlayback(): Promise<void> {
