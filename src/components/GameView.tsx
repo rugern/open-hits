@@ -48,10 +48,7 @@ export function GameView({ playlistId, playlistName, onExit }: GameViewProps) {
       <Shell>
         {isForbidden ? (
           <p className="mx-auto max-w-md rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
-            Spotify won't let this app read this playlist. The app is in
-            Development Mode, which restricts access to some third-party
-            playlists. If this is a friend's playlist, ask them to add you as
-            a collaborator and try again.
+            Spotify won't let the app read this playlist. You need to be either the playlist owner or a collaborator to access it.
           </p>
         ) : (
           <p className="text-rose-300">Failed to load tracks: {error}</p>
