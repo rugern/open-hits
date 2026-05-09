@@ -32,10 +32,20 @@ The app plays music via the user's Spotify account (from a playlist they choose)
 
 **Hiding metadata.** Track payloads from `/v1/playlists/{id}/items` contain artist/title/album. The web UI must withhold these until the players trigger reveal. Treat the track list as a controlled secret in app state — do not log it, do not render it anywhere except the reveal card, and be careful with React DevTools-friendly prop drilling. Note the Connect API caveat above: the *receiving Spotify device's screen* will show this info regardless — that's an accepted trade-off, not a bug.
 
+**Premium gating happens at click-time.** `/v1/me/player/play` requires a Premium account, but we deliberately do **not** request the `user-read-private` scope (which would expose `product` on `/me` and let us detect Premium upfront). Instead, Free users discover the limitation when the play call returns 403 with `reason: PREMIUM_REQUIRED`, and `PlayingView` renders an inline amber banner explaining what's needed. This is a scope-minimization tradeoff, not an oversight.
+
 **Release year.** Spotify's track object exposes `album.release_date` and `album.release_date_precision` (`year` | `month` | `day`). Year-precision is enough for all five question types, but the precision field must be checked — some albums only have year, which still works; the failure mode is missing data, not wrong data.
 
 **GitHub Pages base path.** If deployed at `username.github.io/open-hits/`, the build needs a non-root base path (Vite `base`, React Router `basename`). The OAuth redirect URI must match exactly.
 
+**Local dev: 127.0.0.1, not localhost.** Spotify rejects `localhost` redirect URIs for apps registered after early 2025. `vite.config.ts` sets `server.host: '127.0.0.1'` so the dev server binds to the IPv4 loopback. Visit `http://127.0.0.1:5173/open-hits/` — `localhost:5173` will time out by design, since the dev server isn't bound there.
+
+**Spotify app status: Development Mode.** The registered app hasn't been submitted for Extended Quota Mode review, which carries two practical consequences:
+- **Spotify-curated playlists 403** on the tracks endpoint. Anything where `owner.id === 'spotify'` (Discover Weekly, editorial like "Today's Top Hits") is unreadable. We filter these out of the playlist grid in `App.tsx`.
+- **Third-party playlists are an inconsistent signal.** A user can read playlists they've collaborated on, but the API's `collaborative` flag isn't reliably set for newer share-via-link / add-user flows. There's no field on the simplified playlist object that says "you can read this". We show all non-curated playlists optimistically and let `fetchPlaylistTracks` surface a friendly amber error in `GameView` when one 403s — see the `tracks_fetch_403` branch of the error UI.
+
+To lift either, the app needs to be approved for Extended Quota Mode via the Spotify dev dashboard.
+
 ## Status
 
-Project is not yet scaffolded. No `package.json`, build config, or source files exist. The first task is choosing a build tool (Vite is the natural fit for this stack) and setting up the toolchain.
+Fully scaffolded, deployed at https://rugern.github.io/open-hits/, and the entire game loop works end-to-end: sign in (PKCE) → playlist grid (with filter input and Spotify-curated hidden) → click a playlist → ready screen with device picker → spin wheel (5–11s, click-to-trigger, optional carnival "Bop it" mode) → track plays in background → reveal album art + title + artists + year (color-coded to the category) → continue → game over with re-shuffle / pick-another. Outstanding ideas live in `TODO.md` (currently empty).
