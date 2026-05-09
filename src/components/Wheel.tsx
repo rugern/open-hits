@@ -28,8 +28,9 @@ function segmentPath(index: number): string {
 // i.e. R ≡ (360 - N * SEGMENT_ANGLE) mod 360. We add 5 full spins on top so
 // the animation feels like a real wheel.
 function rotationForSegment(currentRotation: number, segmentIndex: number): number {
-  const targetMod = ((360 - segmentIndex * SEGMENT_ANGLE) % 360 + 360) % 360
-  const currentMod = ((currentRotation % 360) + 360) % 360
+  const targetMod = (360 - segmentIndex * SEGMENT_ANGLE) % 360
+  const currentMod = currentRotation % 360
+  // Subtraction can go negative, so the +360 dance is still needed here.
   const angleDelta = (targetMod - currentMod + 360) % 360
   return currentRotation + MIN_FULL_SPINS * 360 + angleDelta
 }
@@ -48,11 +49,17 @@ export function Wheel({
   onClick,
   onSpinComplete,
 }: WheelProps) {
-  const [rotation, setRotation] = useState(0)
+  // Pick a random starting category on mount so each game session begins
+  // with a different segment under the pointer. Computed via the same formula
+  // as rotationForSegment so the chosen segment is exactly centered.
+  const [rotation, setRotation] = useState(() => {
+    const idx = Math.floor(Math.random() * WHEEL_CATEGORIES.length)
+    return (360 - idx * SEGMENT_ANGLE) % 360
+  })
   // Mirrors `rotation` so the effect below can read the current value
   // synchronously without putting `rotation` in its deps (which would
   // cause an unwanted re-run after each spin).
-  const rotationRef = useRef(0)
+  const rotationRef = useRef(rotation)
 
   useEffect(() => {
     if (targetIndex === null) return
