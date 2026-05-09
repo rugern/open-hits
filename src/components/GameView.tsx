@@ -416,13 +416,17 @@ function PlayingView({
   onReveal: () => void
 }) {
   const category = WHEEL_CATEGORIES[categoryIndex]
+  const color = category?.color ?? '#10b981'
   return (
     <div className="text-center">
       <RoundCounter roundNumber={roundNumber} totalTracks={totalTracks} />
       <p className="mt-8 text-sm uppercase tracking-wide text-slate-400">
         Guess the
       </p>
-      <h2 className="party-text mt-2 text-5xl font-black text-emerald-400">
+      <h2
+        className="party-text mt-2 text-5xl font-black"
+        style={{ color }}
+      >
         {category?.label}
       </h2>
       <p className="mt-8 text-slate-300">
@@ -432,7 +436,8 @@ function PlayingView({
       <button
         type="button"
         onClick={onReveal}
-        className="mt-10 rounded-full bg-emerald-500 px-10 py-4 text-lg font-semibold text-slate-950 transition hover:bg-emerald-400"
+        style={{ backgroundColor: color }}
+        className="mt-10 rounded-full px-10 py-4 text-lg font-semibold text-slate-950 transition hover:brightness-110"
       >
         All guessed — reveal
       </button>
@@ -471,19 +476,29 @@ function RevealingView({
   onContinue: () => void
 }) {
   const category = WHEEL_CATEGORIES[categoryIndex]
+  // Same color the segment shows on the wheel — when bop-it is on the wheel
+  // animates, but party mode is auto-cleared on reveal so the static color
+  // is always what the player just saw the wheel land on.
+  const color = category?.color ?? '#10b981'
   return (
     <div className="text-center">
       <RoundCounter roundNumber={roundNumber} totalTracks={totalTracks} />
-      <p className="mt-6 text-sm uppercase tracking-wide text-slate-400">
-        The category was: {category?.label}
-      </p>
+      <div className="mt-6">
+        <span
+          className="inline-block rounded-full px-4 py-1.5 text-sm font-semibold uppercase tracking-wide text-slate-950"
+          style={{ backgroundColor: color }}
+        >
+          The category was: {category?.label}
+        </span>
+      </div>
       <div className="mt-8">
-        <RevealCard track={track} />
+        <RevealCard track={track} accentColor={color} />
       </div>
       <button
         type="button"
         onClick={onContinue}
-        className="mt-10 rounded-full bg-emerald-500 px-10 py-4 text-lg font-semibold text-slate-950 transition hover:bg-emerald-400"
+        style={{ backgroundColor: color }}
+        className="mt-10 rounded-full px-10 py-4 text-lg font-semibold text-slate-950 transition hover:brightness-110"
       >
         Continue
       </button>

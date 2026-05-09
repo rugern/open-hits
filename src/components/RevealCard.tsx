@@ -1,6 +1,12 @@
 import type { GameTrack } from '../spotify/api'
 
-export function RevealCard({ track }: { track: GameTrack }) {
+export function RevealCard({
+  track,
+  accentColor,
+}: {
+  track: GameTrack
+  accentColor: string
+}) {
   return (
     <div className="mx-auto max-w-md text-center">
       {track.albumImage ? (
@@ -14,7 +20,10 @@ export function RevealCard({ track }: { track: GameTrack }) {
       )}
       <p className="mt-6 text-3xl font-bold leading-tight">{track.name}</p>
       <p className="mt-2 text-lg text-slate-300">{track.artists.join(', ')}</p>
-      <p className="mt-4 font-mono text-3xl font-semibold text-emerald-400">
+      <p
+        className="mt-4 font-mono text-3xl font-semibold"
+        style={{ color: accentColor }}
+      >
         {track.year}
       </p>
     </div>

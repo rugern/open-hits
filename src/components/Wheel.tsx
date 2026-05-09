@@ -10,14 +10,6 @@ const RADIUS = CENTER - 16
 const LABEL_RADIUS = RADIUS * 0.62
 const MIN_FULL_SPINS = 5
 
-const SEGMENT_COLORS = [
-  '#10b981',
-  '#06b6d4',
-  '#a78bfa',
-  '#f472b6',
-  '#fbbf24',
-] as const
-
 function polar(thetaDeg: number, r: number): [number, number] {
   const theta = (thetaDeg * Math.PI) / 180
   return [CENTER + r * Math.sin(theta), CENTER - r * Math.cos(theta)]
@@ -132,7 +124,7 @@ export function Wheel({
             <g key={cat.id}>
               <path
                 d={segmentPath(i)}
-                fill={SEGMENT_COLORS[i]}
+                fill={cat.color}
                 stroke="rgb(15 23 42 / 0.6)"
                 strokeWidth={2}
                 className={`wheel-segment wheel-segment-${i}`}
