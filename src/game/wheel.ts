@@ -20,6 +20,6 @@ export function pickCategoryIndex(): number {
 }
 
 export function pickSpinDurationMs(): number {
-  // Uniform [5000, 9000]
-  return 5000 + Math.floor(Math.random() * 4001)
+  // Uniform [5000, 11000]
+  return 5000 + Math.floor(Math.random() * 6001)
 }

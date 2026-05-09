@@ -492,7 +492,7 @@ function RevealingView({
         </span>
       </div>
       <div className="mt-8">
-        <RevealCard track={track} accentColor={color} />
+        <RevealCard track={track} />
       </div>
       <button
         type="button"
