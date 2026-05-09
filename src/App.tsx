@@ -109,6 +109,27 @@ function SignedInView({
   const [selected, setSelected] = useState<SpotifyPlaylist | null>(null)
   const [filter, setFilter] = useState('')
 
+  // Spotify-curated playlists (Discover Weekly, editorial like "Today's Top
+  // Hits", etc.) always 403 for apps in Development Mode, so we hide them.
+  // For other third-party playlists the API doesn't reliably tell us whether
+  // we can read them — we show them optimistically and let a click-time 403
+  // surface a friendly error in GameView.
+  const isLikelyPlayable = (p: SpotifyPlaylist): boolean =>
+    p.owner?.id !== 'spotify'
+
+  const playable: typeof playlists =
+    playlists.status === 'loaded'
+      ? {
+          ...playlists,
+          playlists: playlists.playlists.filter(isLikelyPlayable),
+        }
+      : playlists
+
+  const hiddenCount =
+    playlists.status === 'loaded'
+      ? playlists.playlists.length - playable.playlists.length
+      : 0
+
   if (selected) {
     return (
       <GameView
@@ -143,12 +164,19 @@ function SignedInView({
       <section className="mt-10">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-xl font-semibold">Pick a playlist to play</h2>
-          {playlists.status === 'loaded' && playlists.playlists.length > 0 && (
+          {playable.status === 'loaded' && playable.playlists.length > 0 && (
             <PlaylistFilter value={filter} onChange={setFilter} />
           )}
         </div>
+        {hiddenCount > 0 && (
+          <p className="mt-2 text-xs text-slate-500">
+            {hiddenCount} Spotify-curated playlist
+            {hiddenCount === 1 ? '' : 's'} hidden — those aren't accessible to
+            apps in Development Mode.
+          </p>
+        )}
         <PlaylistsList
-          state={playlists}
+          state={playable}
           filter={filter}
           onSelect={setSelected}
         />

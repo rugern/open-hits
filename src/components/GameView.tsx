@@ -43,9 +43,19 @@ export function GameView({ playlistId, playlistName, onExit }: GameViewProps) {
   }, [playlistId])
 
   if (error) {
+    const isForbidden = error.startsWith('tracks_fetch_403')
     return (
       <Shell>
-        <p className="text-rose-300">Failed to load tracks: {error}</p>
+        {isForbidden ? (
+          <p className="mx-auto max-w-md rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
+            Spotify won't let this app read this playlist. The app is in
+            Development Mode, which restricts access to some third-party
+            playlists. If this is a friend's playlist, ask them to add you as
+            a collaborator and try again.
+          </p>
+        ) : (
+          <p className="text-rose-300">Failed to load tracks: {error}</p>
+        )}
         <BackButton onClick={onExit} />
       </Shell>
     )
