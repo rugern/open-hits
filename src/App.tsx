@@ -21,7 +21,7 @@ function App() {
           </li>
           <li className="flex gap-3">
             <span className="font-mono text-emerald-400">3.</span>
-            Guess. Reveal. Move on.
+            Guess. Reveal. Repeat.
           </li>
         </ol>
 
