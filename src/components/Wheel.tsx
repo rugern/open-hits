@@ -135,6 +135,7 @@ export function Wheel({
                 fill={SEGMENT_COLORS[i]}
                 stroke="rgb(15 23 42 / 0.6)"
                 strokeWidth={2}
+                className={`wheel-segment wheel-segment-${i}`}
               />
               <text
                 x={lx}

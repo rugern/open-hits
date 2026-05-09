@@ -91,6 +91,7 @@ function Game({
   const game = useGame(tracks)
   const playback = usePlayback()
   const [playError, setPlayError] = useState<string | null>(null)
+  const [partyMode, setPartyMode] = useState(false)
 
   useEffect(() => {
     if (game.state.kind !== 'playing') return
@@ -106,66 +107,76 @@ function Game({
     game.continueRound()
   }
 
+  // Reveal also clears party mode so the next player gets a fresh choice.
+  const handleReveal = () => {
+    setPartyMode(false)
+    game.reveal()
+  }
+
   return (
-    <Shell>
-      <Header playlistName={playlistName} onExit={onExit} />
+    <div className={partyMode ? 'min-h-screen party-mode' : ''}>
+      <Shell>
+        <Header playlistName={playlistName} onExit={onExit} />
 
-      <div className="mt-10">
-        {game.state.kind === 'ready' && (
-          <ReadyView
-            totalTracks={game.totalTracks}
-            playback={playback}
-            onStart={game.startGame}
-          />
-        )}
+        <div className="mt-10">
+          {game.state.kind === 'ready' && (
+            <ReadyView
+              totalTracks={game.totalTracks}
+              playback={playback}
+              onStart={game.startGame}
+            />
+          )}
 
-        {(game.state.kind === 'awaiting-spin' ||
-          game.state.kind === 'spinning') && (
-          <RoundView
-            targetIndex={
-              game.state.kind === 'spinning'
-                ? game.state.categoryIndex
-                : null
-            }
-            durationMs={
-              game.state.kind === 'spinning' ? game.state.durationMs : 0
-            }
-            roundNumber={game.roundNumber}
-            totalTracks={game.totalTracks}
-            onSpinNow={game.spinNow}
-            onSpinComplete={game.onSpinComplete}
-          />
-        )}
+          {(game.state.kind === 'awaiting-spin' ||
+            game.state.kind === 'spinning') && (
+            <RoundView
+              targetIndex={
+                game.state.kind === 'spinning'
+                  ? game.state.categoryIndex
+                  : null
+              }
+              durationMs={
+                game.state.kind === 'spinning' ? game.state.durationMs : 0
+              }
+              roundNumber={game.roundNumber}
+              totalTracks={game.totalTracks}
+              onSpinNow={game.spinNow}
+              onSpinComplete={game.onSpinComplete}
+              partyMode={partyMode}
+              onTogglePartyMode={() => setPartyMode((p) => !p)}
+            />
+          )}
 
-        {game.state.kind === 'playing' && (
-          <PlayingView
-            categoryIndex={game.state.categoryIndex}
-            roundNumber={game.roundNumber}
-            totalTracks={game.totalTracks}
-            playError={playError}
-            onReveal={game.reveal}
-          />
-        )}
+          {game.state.kind === 'playing' && (
+            <PlayingView
+              categoryIndex={game.state.categoryIndex}
+              roundNumber={game.roundNumber}
+              totalTracks={game.totalTracks}
+              playError={playError}
+              onReveal={handleReveal}
+            />
+          )}
 
-        {game.state.kind === 'revealing' && (
-          <RevealingView
-            categoryIndex={game.state.categoryIndex}
-            track={game.state.track}
-            roundNumber={game.roundNumber}
-            totalTracks={game.totalTracks}
-            onContinue={handleContinue}
-          />
-        )}
+          {game.state.kind === 'revealing' && (
+            <RevealingView
+              categoryIndex={game.state.categoryIndex}
+              track={game.state.track}
+              roundNumber={game.roundNumber}
+              totalTracks={game.totalTracks}
+              onContinue={handleContinue}
+            />
+          )}
 
-        {game.state.kind === 'done' && (
-          <DoneView
-            totalTracks={game.totalTracks}
-            onPlayAgain={game.restart}
-            onExit={onExit}
-          />
-        )}
-      </div>
-    </Shell>
+          {game.state.kind === 'done' && (
+            <DoneView
+              totalTracks={game.totalTracks}
+              onPlayAgain={game.restart}
+              onExit={onExit}
+            />
+          )}
+        </div>
+      </Shell>
+    </div>
   )
 }
 
@@ -184,7 +195,7 @@ function Header({
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-6">
       <div>
         <p className="text-xs uppercase tracking-wide text-slate-500">Playing</p>
-        <p className="text-xl font-semibold">{playlistName}</p>
+        <p className="party-text text-xl font-semibold">{playlistName}</p>
       </div>
       <button
         type="button"
@@ -348,6 +359,8 @@ function RoundView({
   totalTracks,
   onSpinNow,
   onSpinComplete,
+  partyMode,
+  onTogglePartyMode,
 }: {
   targetIndex: number | null
   durationMs: number
@@ -355,6 +368,8 @@ function RoundView({
   totalTracks: number
   onSpinNow: () => void
   onSpinComplete: () => void
+  partyMode: boolean
+  onTogglePartyMode: () => void
 }) {
   const isAwaiting = targetIndex === null
   return (
@@ -368,6 +383,21 @@ function RoundView({
           onSpinComplete={onSpinComplete}
         />
       </div>
+      {isAwaiting && (
+        <button
+          type="button"
+          onClick={onTogglePartyMode}
+          className={
+            'mt-6 rounded-full border px-3 py-1 text-xs font-medium transition ' +
+            (partyMode
+              ? 'border-pink-200 bg-pink-500/40 text-pink-50'
+              : 'border-pink-500/50 bg-pink-500/10 text-pink-300 hover:border-pink-400')
+          }
+        >
+          <span className={partyMode ? 'party-emoji' : ''}>🎉</span>{' '}
+          {partyMode ? 'Bop off' : 'Bop it!'}
+        </button>
+      )}
     </div>
   )
 }
@@ -392,7 +422,7 @@ function PlayingView({
       <p className="mt-8 text-sm uppercase tracking-wide text-slate-400">
         Guess the
       </p>
-      <h2 className="mt-2 text-5xl font-black text-emerald-400">
+      <h2 className="party-text mt-2 text-5xl font-black text-emerald-400">
         {category?.label}
       </h2>
       <p className="mt-8 text-slate-300">
@@ -472,7 +502,7 @@ function DoneView({
 }) {
   return (
     <div className="text-center">
-      <h2 className="text-4xl font-black">Game over</h2>
+      <h2 className="party-text text-4xl font-black">Game over</h2>
       <p className="mt-4 text-slate-300">
         You played all {totalTracks} tracks.
       </p>

@@ -1,1 +1,58 @@
 @import "tailwindcss";
+
+/* ----- Bop-it / party mode ----- */
+
+@keyframes party-bg {
+  0%   { background-position:   0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@keyframes party-fill {
+  0%   { fill: #f43f5e; }
+  16%  { fill: #f59e0b; }
+  33%  { fill: #facc15; }
+  50%  { fill: #22c55e; }
+  66%  { fill: #06b6d4; }
+  83%  { fill: #a855f7; }
+  100% { fill: #f43f5e; }
+}
+
+@keyframes party-pulse {
+  0%   { color: #f43f5e; text-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
+  16%  { color: #f59e0b; }
+  33%  { color: #facc15; }
+  50%  { color: #22c55e; }
+  66%  { color: #06b6d4; }
+  83%  { color: #a855f7; }
+  100% { color: #f43f5e; }
+}
+
+@keyframes party-spin {
+  to { transform: rotate(360deg); }
+}
+
+.party-mode {
+  background: linear-gradient(
+    90deg,
+    #be185d, #f59e0b, #16a34a, #2563eb, #7c3aed, #be185d
+  );
+  background-size: 200% 100%;
+  animation: party-bg 6s linear infinite;
+}
+
+.party-mode .party-text {
+  animation: party-pulse 1.5s linear infinite;
+}
+
+.party-mode .wheel-segment {
+  animation: party-fill 1s linear infinite;
+}
+.party-mode .wheel-segment-1 { animation-delay: 0.2s; }
+.party-mode .wheel-segment-2 { animation-delay: 0.4s; }
+.party-mode .wheel-segment-3 { animation-delay: 0.6s; }
+.party-mode .wheel-segment-4 { animation-delay: 0.8s; }
+
+.party-emoji {
+  display: inline-block;
+  animation: party-spin 1.2s linear infinite;
+}
