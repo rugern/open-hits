@@ -108,6 +108,7 @@ function SignedInView({
   const playlists = usePlaylists()
   const isPremium = user.product === 'premium'
   const [selected, setSelected] = useState<SpotifyPlaylist | null>(null)
+  const [filter, setFilter] = useState('')
 
   if (selected) {
     return (
@@ -160,11 +161,17 @@ function SignedInView({
       )}
 
       <section className="mt-10">
-        <h2 className="text-xl font-semibold">
-          {isPremium ? 'Pick a playlist to play' : 'Your playlists'}
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2 className="text-xl font-semibold">
+            {isPremium ? 'Pick a playlist to play' : 'Your playlists'}
+          </h2>
+          {playlists.status === 'loaded' && playlists.playlists.length > 0 && (
+            <PlaylistFilter value={filter} onChange={setFilter} />
+          )}
+        </div>
         <PlaylistsList
           state={playlists}
+          filter={filter}
           onSelect={isPremium ? setSelected : null}
         />
       </section>
@@ -174,9 +181,11 @@ function SignedInView({
 
 function PlaylistsList({
   state,
+  filter,
   onSelect,
 }: {
   state: ReturnType<typeof usePlaylists>
+  filter: string
   onSelect: ((playlist: SpotifyPlaylist) => void) | null
 }) {
   if (state.status === 'loading') {
@@ -192,12 +201,56 @@ function PlaylistsList({
   if (state.playlists.length === 0) {
     return <p className="mt-4 text-slate-400">You don't have any playlists yet.</p>
   }
+
+  const trimmed = filter.trim().toLowerCase()
+  const matches = trimmed
+    ? state.playlists.filter((p) => p.name.toLowerCase().includes(trimmed))
+    : state.playlists
+
+  if (matches.length === 0) {
+    return (
+      <p className="mt-4 text-slate-400">
+        No playlists match "{filter.trim()}".
+      </p>
+    )
+  }
+
   return (
     <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {state.playlists.map((p) => (
+      {matches.map((p) => (
         <PlaylistCard key={p.id} playlist={p} onSelect={onSelect} />
       ))}
     </ul>
+  )
+}
+
+function PlaylistFilter({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (next: string) => void
+}) {
+  return (
+    <div className="relative w-full sm:w-72">
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Filter playlists…"
+        className="w-full rounded-full border border-slate-700 bg-slate-900/60 px-4 py-2 pr-9 text-sm text-slate-100 placeholder:text-slate-500 transition focus:border-emerald-500 focus:outline-none"
+      />
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange('')}
+          aria-label="Clear filter"
+          className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-700 hover:text-slate-100"
+        >
+          ×
+        </button>
+      )}
+    </div>
   )
 }
 
