@@ -62,6 +62,9 @@ function CenteredHero({
 function LandingPitch({ onLogin }: { onLogin: () => void }) {
   return (
     <>
+      <p className="mt-4 text-base italic text-emerald-300/80">
+        50% less engagement, 100% more luggage space!
+      </p>
       <p className="mt-6 max-w-xl text-lg text-slate-300">
         A self-hosted music guessing game. Connect your Spotify, pick a playlist,
         and let the wheel decide what your friends have to guess.
