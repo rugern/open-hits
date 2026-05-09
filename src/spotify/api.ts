@@ -3,7 +3,6 @@ import { getAccessToken } from './auth'
 export interface SpotifyUser {
   id: string
   display_name: string | null
-  email: string
   product: 'free' | 'premium' | 'open' | string
 }
 

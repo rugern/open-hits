@@ -1,7 +1,6 @@
 export const SPOTIFY_CLIENT_ID = 'fb3d8f36f9074ead917f1b1c44fc014c'
 
 export const SPOTIFY_SCOPES = [
-  'user-read-email',
   'user-read-private',
   'user-read-playback-state',
   'user-modify-playback-state',
