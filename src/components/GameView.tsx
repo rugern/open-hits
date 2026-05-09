@@ -386,7 +386,7 @@ function PlayingView({
         {category?.label}
       </h2>
       <p className="mt-8 text-slate-300">
-        Listen, discuss, and decide on your guesses.
+        Listen, ponder, and decide on your guesses
       </p>
       {playError && (
         <p className="mt-4 text-sm text-rose-300">

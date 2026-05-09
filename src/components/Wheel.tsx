@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { WHEEL_CATEGORIES } from '../game/wheel'
+import { scheduleSpinTicks } from '../game/sound'
 
 const SEGMENT_ANGLE = 360 / WHEEL_CATEGORIES.length
 const SEGMENT_HALF = SEGMENT_ANGLE / 2
@@ -56,16 +57,31 @@ export function Wheel({
   onSpinComplete,
 }: WheelProps) {
   const [rotation, setRotation] = useState(0)
+  // Mirrors `rotation` so the effect below can read the current value
+  // synchronously without putting `rotation` in its deps (which would
+  // cause an unwanted re-run after each spin).
+  const rotationRef = useRef(0)
 
   useEffect(() => {
     if (targetIndex === null) return
-    // RAF defers the rotation change to a frame after the initial commit so the
-    // CSS transition has a stable starting value to interpolate from.
+
+    const next = rotationForSegment(rotationRef.current, targetIndex)
+    const distance = next - rotationRef.current
+
+    const cancelTicks = scheduleSpinTicks(durationMs, distance)
+
+    // RAF defers the rotation change to a frame after the initial commit so
+    // the CSS transition has a stable starting value to interpolate from.
     const handle = requestAnimationFrame(() => {
-      setRotation((prev) => rotationForSegment(prev, targetIndex))
+      rotationRef.current = next
+      setRotation(next)
     })
-    return () => cancelAnimationFrame(handle)
-  }, [targetIndex])
+
+    return () => {
+      cancelAnimationFrame(handle)
+      cancelTicks()
+    }
+  }, [targetIndex, durationMs])
 
   const isAnimating = targetIndex !== null
   const isClickable = !isAnimating && onClick !== undefined
