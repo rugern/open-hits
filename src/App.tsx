@@ -204,10 +204,10 @@ function SignedInView({
         }
       : playlists
 
-  // Bingo overlay renders on top while the underlying view stays mounted, so
-  // any in-progress game (selected playlist, wheel state, playback) survives.
-  const overlay = bingoOpen ? <HostBingoOverlay onBack={closeBingo} /> : null
-
+  // Bingo overlay renders on top while GameView stays mounted, so any
+  // in-progress game (selected playlist, wheel state, playback) survives.
+  // Only reachable from inside an active game — the playlist picker has no
+  // bingo affordance.
   if (selected) {
     return (
       <>
@@ -217,13 +217,12 @@ function SignedInView({
           onExit={() => setSelected(null)}
           onOpenBingo={openBingo}
         />
-        {overlay}
+        {bingoOpen && <HostBingoOverlay onBack={closeBingo} />}
       </>
     )
   }
 
   return (
-    <>
     <main className="mx-auto max-w-5xl px-6 py-10">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <h1 className="text-3xl font-black tracking-tight">
@@ -236,13 +235,6 @@ function SignedInView({
           >
             ← Back
           </Link>
-          <button
-            type="button"
-            onClick={openBingo}
-            className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-500 hover:text-slate-100"
-          >
-            Bingo
-          </button>
           <div className="text-right">
             <p className="text-xs text-slate-400">Signed in as</p>
             <p className="text-sm font-semibold">{user.display_name ?? user.id}</p>
@@ -275,8 +267,6 @@ function SignedInView({
         />
       </section>
     </main>
-    {overlay}
-    </>
   )
 }
 
