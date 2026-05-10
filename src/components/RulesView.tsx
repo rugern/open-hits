@@ -25,7 +25,8 @@ export function RulesView() {
             'Pick a playlist. Songs from it will play in random order during the game.',
             'Choose which Spotify device to play through (phone, desktop, smart speaker).',
             'Each round: tap the wheel to spin. Music starts when it lands. The category — artist, title, exact year, year ±3, or decade — decides what players have to guess.',
-            'When the table is ready, tap "Reveal" to show the album art, song info, and color-coded category. Tap "Continue" for the next round.',
+            'You can participate as a guesser by using the "Bingo" button in the header.',
+            'When the table is ready, tap "Reveal" to show the song info. Tap "Continue" for the next round.',
           ]}
         />
 
@@ -35,9 +36,10 @@ export function RulesView() {
           summary="Plays along on their own phone with a bingo card. No Spotify needed."
           steps={[
             'Open the same site and tap "Join game". You get a 5×5 bingo card with five colored categories (5 squares each).',
-            'Each round, listen to the host\'s song and try to guess whatever the wheel landed on. Type your answer into the input below the card — silently.',
+            'Each round, listen to the host\'s song and try to guess whatever the wheel landed on. Type your answer into the input below the card without revealing your answer just yet.',
             'When everyone\'s ready to compare, rotate your phone to landscape. Your typed guess fills the screen so the table can read it from across the room.',
-            'After the host reveals, tap any square of the matching color to mark it as guessed. Strategy is up to you — corners, lines, full board.',
+            'After the host reveals the answer, if you guessed correctly tap the matching color to mark it.',
+            'When you have marked 5 squares in a row, column, or diagonal, you yell BINGO loud enough for the neighbours to hear it, and you have won!',
           ]}
         />
       </div>
