@@ -30,6 +30,10 @@ function LandingRoute() {
       window.location.search.includes('code=') ||
       window.location.search.includes('error='),
   )
+  // Lets the user dismiss a sign-in failure and see the regular hero. Reset
+  // implicitly via the page reload that startLogin() triggers on the next
+  // attempt.
+  const [errorDismissed, setErrorDismissed] = useState(false)
 
   useEffect(() => {
     if (hadCallback && auth.status === 'authenticated') {
@@ -49,7 +53,17 @@ function LandingRoute() {
     else auth.login()
   }
 
-  return <CenteredHero status={auth.status} error={auth.error} onStartHost={onStartHost} />
+  const displayedStatus =
+    auth.status === 'error' && errorDismissed ? 'idle' : auth.status
+
+  return (
+    <CenteredHero
+      status={displayedStatus}
+      error={auth.error}
+      onStartHost={onStartHost}
+      onDismissError={() => setErrorDismissed(true)}
+    />
+  )
 }
 
 function HostRoute() {
@@ -83,10 +97,12 @@ function CenteredHero({
   status,
   error,
   onStartHost,
+  onDismissError,
 }: {
   status: 'loading' | 'idle' | 'error' | 'authenticated'
   error: string | null
   onStartHost: () => void
+  onDismissError: () => void
 }) {
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center px-6 py-16 text-center">
@@ -103,15 +119,30 @@ function CenteredHero({
       {status === 'error' && (
         <>
           <p className="mt-8 max-w-md text-rose-300">
-            Sign-in failed{error ? `: ${error}` : ''}. Try again?
+            Sign-in failed{error ? `: ${error}` : ''}.
           </p>
-          <button
-            type="button"
-            onClick={onStartHost}
-            className="mt-6 rounded-full bg-emerald-500 px-8 py-3 font-semibold text-slate-950 hover:bg-emerald-400"
-          >
-            Start as host
-          </button>
+          <p className="mt-4 max-w-md text-sm text-slate-300">
+            To host a game, your Spotify account has to be added as a test
+            user on this app's Spotify dashboard. If you weren't expecting
+            to be on the list, ask whoever runs this deployment to add you —
+            or fork the repo and run your own (see the README).
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={onStartHost}
+              className="rounded-full bg-emerald-500 px-8 py-3 font-semibold text-slate-950 hover:bg-emerald-400"
+            >
+              Try again
+            </button>
+            <button
+              type="button"
+              onClick={onDismissError}
+              className="rounded-full border border-slate-700 px-8 py-3 font-semibold text-slate-300 transition hover:border-slate-500 hover:text-slate-100"
+            >
+              Back to landing
+            </button>
+          </div>
         </>
       )}
     </main>
