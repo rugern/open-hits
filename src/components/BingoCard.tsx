@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CategoryId } from '../game/wheel'
 import { WHEEL_CATEGORIES } from '../game/wheel'
 import { shuffle } from '../game/shuffle'
+import { useWakeLock } from '../game/useWakeLock'
 
 const STORAGE_KEY = 'open-hits.bingo'
 const BOARD_SIZE = 25
@@ -58,6 +59,7 @@ export function BingoCard() {
   const [isLandscape, setIsLandscape] = useState(() =>
     window.matchMedia('(orientation: landscape)').matches,
   )
+  useWakeLock()
 
   useEffect(() => {
     try {

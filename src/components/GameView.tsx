@@ -13,9 +13,15 @@ interface GameViewProps {
   playlistId: string
   playlistName: string
   onExit: () => void
+  onOpenBingo: () => void
 }
 
-export function GameView({ playlistId, playlistName, onExit }: GameViewProps) {
+export function GameView({
+  playlistId,
+  playlistName,
+  onExit,
+  onOpenBingo,
+}: GameViewProps) {
   const [tracks, setTracks] = useState<GameTrack[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -73,6 +79,7 @@ export function GameView({ playlistId, playlistName, onExit }: GameViewProps) {
       tracks={tracks}
       playlistName={playlistName}
       onExit={onExit}
+      onOpenBingo={onOpenBingo}
     />
   )
 }
@@ -81,10 +88,12 @@ function Game({
   tracks,
   playlistName,
   onExit,
+  onOpenBingo,
 }: {
   tracks: GameTrack[]
   playlistName: string
   onExit: () => void
+  onOpenBingo: () => void
 }) {
   const game = useGame(tracks)
   const playback = usePlayback()
@@ -122,7 +131,11 @@ function Game({
   return (
     <div className={partyMode ? 'min-h-screen party-mode' : ''}>
       <Shell>
-        <Header playlistName={playlistName} onExit={onExit} />
+        <Header
+          playlistName={playlistName}
+          onExit={onExit}
+          onOpenBingo={onOpenBingo}
+        />
 
         <div className="mt-10">
           {game.state.kind === 'ready' && (
@@ -193,9 +206,11 @@ function Shell({ children }: { children: React.ReactNode }) {
 function Header({
   playlistName,
   onExit,
+  onOpenBingo,
 }: {
   playlistName: string
   onExit: () => void
+  onOpenBingo: () => void
 }) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-6">
@@ -203,13 +218,22 @@ function Header({
         <p className="text-xs uppercase tracking-wide text-slate-500">Playing</p>
         <p className="party-text text-xl font-semibold">{playlistName}</p>
       </div>
-      <button
-        type="button"
-        onClick={onExit}
-        className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-500 hover:text-slate-100"
-      >
-        Quit
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onOpenBingo}
+          className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-500 hover:text-slate-100"
+        >
+          Bingo
+        </button>
+        <button
+          type="button"
+          onClick={onExit}
+          className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-500 hover:text-slate-100"
+        >
+          Quit
+        </button>
+      </div>
     </header>
   )
 }

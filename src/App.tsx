@@ -4,6 +4,7 @@ import { useSpotifyAuth } from './spotify/useSpotifyAuth'
 import { usePlaylists } from './spotify/usePlaylists'
 import type { SpotifyPlaylist, SpotifyUser } from './spotify/api'
 import { GameView } from './components/GameView'
+import { HostBingoOverlay } from './components/HostBingoOverlay'
 import { JoinView } from './components/JoinView'
 
 function App() {
@@ -174,6 +175,9 @@ function SignedInView({
   const playlists = usePlaylists()
   const [selected, setSelected] = useState<SpotifyPlaylist | null>(null)
   const [filter, setFilter] = useState('')
+  const [bingoOpen, setBingoOpen] = useState(false)
+  const openBingo = () => setBingoOpen(true)
+  const closeBingo = () => setBingoOpen(false)
 
   // Spotify-curated playlists (Discover Weekly, editorial like "Today's Top
   // Hits", etc.) always 403 for apps in Development Mode, so we hide them.
@@ -191,23 +195,39 @@ function SignedInView({
         }
       : playlists
 
+  // Bingo overlay renders on top while the underlying view stays mounted, so
+  // any in-progress game (selected playlist, wheel state, playback) survives.
+  const overlay = bingoOpen ? <HostBingoOverlay onBack={closeBingo} /> : null
+
   if (selected) {
     return (
-      <GameView
-        playlistId={selected.id}
-        playlistName={selected.name}
-        onExit={() => setSelected(null)}
-      />
+      <>
+        <GameView
+          playlistId={selected.id}
+          playlistName={selected.name}
+          onExit={() => setSelected(null)}
+          onOpenBingo={openBingo}
+        />
+        {overlay}
+      </>
     )
   }
 
   return (
+    <>
     <main className="mx-auto max-w-5xl px-6 py-10">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <h1 className="text-3xl font-black tracking-tight">
           Open <span className="text-emerald-400">Hits</span>
         </h1>
         <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={openBingo}
+            className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-500 hover:text-slate-100"
+          >
+            Bingo
+          </button>
           <div className="text-right">
             <p className="text-xs text-slate-400">Signed in as</p>
             <p className="text-sm font-semibold">{user.display_name ?? user.id}</p>
@@ -240,6 +260,8 @@ function SignedInView({
         />
       </section>
     </main>
+    {overlay}
+    </>
   )
 }
 

@@ -1,10 +1,7 @@
 import { Link } from 'react-router-dom'
-import { useWakeLock } from '../game/useWakeLock'
 import { BingoCard } from './BingoCard'
 
 export function JoinView() {
-  useWakeLock()
-
   return (
     <main className="mx-auto max-w-3xl px-6 py-6">
       <header className="flex items-center justify-between border-b border-slate-800 pb-4">
