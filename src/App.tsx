@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, Route, Routes, useNavigate } from 'react-router-dom'
 import { useSpotifyAuth } from './spotify/useSpotifyAuth'
 import { usePlaylists } from './spotify/usePlaylists'
-import type { SpotifyPlaylist, SpotifyUser } from './spotify/api'
+import type { SpotifyPlaylist } from './spotify/api'
 import { GameView } from './components/GameView'
 import { HostBingoOverlay } from './components/HostBingoOverlay'
 import { JoinView } from './components/JoinView'
@@ -66,7 +66,7 @@ function HostRoute() {
   }, [auth.status, navigate])
 
   if (auth.status === 'authenticated' && auth.user) {
-    return <SignedInView user={auth.user} onLogout={auth.logout} />
+    return <SignedInView onLogout={auth.logout} />
   }
   return <CenteredMessage text="Loading…" />
 }
@@ -174,13 +174,7 @@ function LandingPitch({ onStartHost }: { onStartHost: () => void }) {
   )
 }
 
-function SignedInView({
-  user,
-  onLogout,
-}: {
-  user: SpotifyUser
-  onLogout: () => void
-}) {
+function SignedInView({ onLogout }: { onLogout: () => void }) {
   const playlists = usePlaylists()
   const [selected, setSelected] = useState<SpotifyPlaylist | null>(null)
   const [filter, setFilter] = useState('')
@@ -224,21 +218,17 @@ function SignedInView({
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-6">
+      <header className="flex flex-wrap items-center gap-4 border-b border-slate-800 pb-6">
         <h1 className="text-3xl font-black tracking-tight">
           Open <span className="text-emerald-400">Hits</span>
         </h1>
-        <div className="flex items-center gap-4">
+        <div className="ml-auto flex items-center gap-4">
           <Link
             to="/"
             className="whitespace-nowrap rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-500 hover:text-slate-100"
           >
             ← Back
           </Link>
-          <div className="text-right">
-            <p className="text-xs text-slate-400">Signed in as</p>
-            <p className="text-sm font-semibold">{user.display_name ?? user.id}</p>
-          </div>
           <button
             type="button"
             onClick={onLogout}
