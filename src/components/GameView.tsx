@@ -378,6 +378,10 @@ function DevicePicker({
       >
         Refresh devices
       </button>
+      <p className="mt-2 text-xs text-slate-500">
+        Don't see your device? Try starting any song on it from the Spotify app, then
+        refresh — Spotify only advertises devices that have played something recently.
+      </p>
     </div>
   )
 }
