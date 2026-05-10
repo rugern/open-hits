@@ -6,6 +6,7 @@ import type { SpotifyPlaylist, SpotifyUser } from './spotify/api'
 import { GameView } from './components/GameView'
 import { HostBingoOverlay } from './components/HostBingoOverlay'
 import { JoinView } from './components/JoinView'
+import { RulesView } from './components/RulesView'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/" element={<LandingRoute />} />
         <Route path="/host" element={<HostRoute />} />
         <Route path="/join" element={<JoinView />} />
+        <Route path="/rules" element={<RulesView />} />
       </Routes>
     </div>
   )
@@ -161,6 +163,13 @@ function LandingPitch({ onStartHost }: { onStartHost: () => void }) {
       <p className="mt-4 text-xs text-slate-500">
         Spotify Premium required to host.
       </p>
+
+      <Link
+        to="/rules"
+        className="mt-6 text-sm text-slate-400 underline transition hover:text-slate-200"
+      >
+        How does it work?
+      </Link>
     </>
   )
 }
