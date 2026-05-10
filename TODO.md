@@ -1,1 +1,2 @@
-4. add a back button in header for host on the playlist page to navigate to landing page; similar to how it looks for joinee on bingo board
+5. Add rules to landing page for playing the game
+6. add tip to selecting device screen for host, something along the lines of "Dont see your device? Try starting a placeholder song on it until the game has played the first song"
