@@ -87,3 +87,7 @@ To produce a production build:
 npm run build
 npm run preview   # serves dist/ for a final check
 ```
+
+## License
+
+[PolyForm Noncommercial 1.0.0](./LICENSE) — you're free to fork, modify, and self-host this for personal, hobby, charitable, educational, or research use. Commercial use (selling access, running it as part of a paid product, etc.) is not permitted under this license. Open an issue if you'd like to discuss a commercial arrangement.
