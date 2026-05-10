@@ -42,7 +42,12 @@ The app plays music via the user's Spotify account (from a playlist they choose)
 
 **Category color is the visual reminder.** Each of the 5 wheel categories has a distinctive hex color in `WHEEL_CATEGORIES` (`src/game/wheel.ts`). Reuse that color anywhere the player needs to be reminded of the current category — already done on the wheel segments, the `PlayingView` heading + button, the `RevealingView` category pill + button, and the bingo cells. When adding new UI that references a category, pull the color from `WHEEL_CATEGORIES.find(c => c.id === id).color` rather than re-picking; consistency is the whole point.
 
-**Routing.** React Router v7 (`react-router-dom`) with `<BrowserRouter basename={import.meta.env.BASE_URL}>`. Two routes: `/` (host flow — landing/playlist/game) and `/join` (player flow — bingo card, no Spotify auth required). Direct loads of `/join` on GitHub Pages would 404; `public/404.html` plus a decoder in `index.html` form the standard SPA fallback (rafgraph/spa-github-pages pattern), so deep links and refreshes work.
+**Routing.** React Router v7 (`react-router-dom`) with `<BrowserRouter basename={import.meta.env.BASE_URL}>`. Three routes:
+- `/` — landing hero with two CTAs ("Start as host" / "Join game"). Never auto-redirects based on auth state, so the same browser can open `/host` in one tab and `/join` in another without one stealing the other. Also processes the Spotify OAuth callback (the redirect URI is `BASE_URL` itself); on a successful callback it forwards to `/host`.
+- `/host` — the host flow: playlist grid → device picker → game loop. Requires authentication; if status is idle/error the route bounces to `/`. "Sign out" works the same way: status flips to idle and the route effect navigates home.
+- `/join` — player flow: bingo card. No Spotify auth required.
+
+Direct loads of any route except `/` on GitHub Pages would 404; `public/404.html` plus a decoder in `index.html` form the standard SPA fallback (rafgraph/spa-github-pages pattern), so deep links and refreshes work.
 
 **Spotify app status: Development Mode.** The registered app hasn't been submitted for Extended Quota Mode review, which carries two practical consequences:
 - **Spotify-curated playlists 403** on the tracks endpoint. Anything where `owner.id === 'spotify'` (Discover Weekly, editorial like "Today's Top Hits") is unreadable. We filter these out of the playlist grid in `App.tsx`.

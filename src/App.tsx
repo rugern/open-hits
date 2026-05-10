@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, Route, Routes } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, Route, Routes, useNavigate } from 'react-router-dom'
 import { useSpotifyAuth } from './spotify/useSpotifyAuth'
 import { usePlaylists } from './spotify/usePlaylists'
 import type { SpotifyPlaylist, SpotifyUser } from './spotify/api'
@@ -10,36 +10,80 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-slate-900 to-slate-950 text-slate-100">
       <Routes>
-        <Route path="/" element={<HomeRoute />} />
+        <Route path="/" element={<LandingRoute />} />
+        <Route path="/host" element={<HostRoute />} />
         <Route path="/join" element={<JoinView />} />
       </Routes>
     </div>
   )
 }
 
-function HomeRoute() {
+function LandingRoute() {
   const auth = useSpotifyAuth()
+  const navigate = useNavigate()
+  // Captured at mount, before the auth handler strips the URL params.
+  const [hadCallback] = useState(
+    () =>
+      window.location.search.includes('code=') ||
+      window.location.search.includes('error='),
+  )
+
+  useEffect(() => {
+    if (hadCallback && auth.status === 'authenticated') {
+      navigate('/host', { replace: true })
+    }
+  }, [auth.status, hadCallback, navigate])
+
+  if (
+    hadCallback &&
+    (auth.status === 'loading' || auth.status === 'authenticated')
+  ) {
+    return <CenteredMessage text="Signing in…" />
+  }
+
+  const onStartHost = () => {
+    if (auth.status === 'authenticated') navigate('/host')
+    else auth.login()
+  }
+
+  return <CenteredHero status={auth.status} error={auth.error} onStartHost={onStartHost} />
+}
+
+function HostRoute() {
+  const auth = useSpotifyAuth()
+  const navigate = useNavigate()
+
+  // Hosting requires auth. Anything other than authenticated bounces back to
+  // the landing page; login flows are initiated from there. Also covers the
+  // sign-out transition (status flips to idle, user is sent home).
+  useEffect(() => {
+    if (auth.status === 'idle' || auth.status === 'error') {
+      navigate('/', { replace: true })
+    }
+  }, [auth.status, navigate])
 
   if (auth.status === 'authenticated' && auth.user) {
     return <SignedInView user={auth.user} onLogout={auth.logout} />
   }
+  return <CenteredMessage text="Loading…" />
+}
+
+function CenteredMessage({ text }: { text: string }) {
   return (
-    <CenteredHero
-      status={auth.status}
-      error={auth.error}
-      onLogin={auth.login}
-    />
+    <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center px-6 text-center">
+      <p className="text-slate-400">{text}</p>
+    </main>
   )
 }
 
 function CenteredHero({
   status,
   error,
-  onLogin,
+  onStartHost,
 }: {
   status: 'loading' | 'idle' | 'error' | 'authenticated'
   error: string | null
-  onLogin: () => void
+  onStartHost: () => void
 }) {
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center px-6 py-16 text-center">
@@ -49,7 +93,9 @@ function CenteredHero({
 
       {status === 'loading' && <p className="mt-10 text-slate-400">Loading…</p>}
 
-      {status === 'idle' && <LandingPitch onLogin={onLogin} />}
+      {(status === 'idle' || status === 'authenticated') && (
+        <LandingPitch onStartHost={onStartHost} />
+      )}
 
       {status === 'error' && (
         <>
@@ -58,7 +104,7 @@ function CenteredHero({
           </p>
           <button
             type="button"
-            onClick={onLogin}
+            onClick={onStartHost}
             className="mt-6 rounded-full bg-emerald-500 px-8 py-3 font-semibold text-slate-950 hover:bg-emerald-400"
           >
             Start as host
@@ -69,7 +115,7 @@ function CenteredHero({
   )
 }
 
-function LandingPitch({ onLogin }: { onLogin: () => void }) {
+function LandingPitch({ onStartHost }: { onStartHost: () => void }) {
   return (
     <>
       <p className="mt-4 text-base italic text-emerald-300/80">
@@ -98,7 +144,7 @@ function LandingPitch({ onLogin }: { onLogin: () => void }) {
       <div className="mt-12 flex flex-col items-center gap-3">
         <button
           type="button"
-          onClick={onLogin}
+          onClick={onStartHost}
           className="w-64 rounded-full bg-emerald-500 px-8 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400"
         >
           Start as host
