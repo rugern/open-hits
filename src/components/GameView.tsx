@@ -135,6 +135,7 @@ function Game({
           playlistName={playlistName}
           onExit={onExit}
           onOpenBingo={onOpenBingo}
+          showBingo={game.state.kind !== 'ready'}
         />
 
         <div className="mt-10">
@@ -207,10 +208,12 @@ function Header({
   playlistName,
   onExit,
   onOpenBingo,
+  showBingo,
 }: {
   playlistName: string
   onExit: () => void
   onOpenBingo: () => void
+  showBingo: boolean
 }) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-6">
@@ -221,18 +224,20 @@ function Header({
       <div className="flex items-center gap-2">
         <button
           type="button"
-          onClick={onOpenBingo}
-          className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-500 hover:text-slate-100"
-        >
-          Bingo
-        </button>
-        <button
-          type="button"
           onClick={onExit}
           className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-500 hover:text-slate-100"
         >
           Quit
         </button>
+        {showBingo && (
+          <button
+            type="button"
+            onClick={onOpenBingo}
+            className="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-300 transition hover:border-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-200"
+          >
+            Bingo
+          </button>
+        )}
       </div>
     </header>
   )

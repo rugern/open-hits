@@ -17,7 +17,7 @@ export function HostBingoOverlay({ onBack }: HostBingoOverlayProps) {
           <button
             type="button"
             onClick={onBack}
-            className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 transition hover:border-slate-500 hover:text-slate-100"
+            className="whitespace-nowrap rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 transition hover:border-slate-500 hover:text-slate-100"
           >
             ← Back
           </button>

@@ -232,7 +232,7 @@ function SignedInView({
         <div className="flex items-center gap-4">
           <Link
             to="/"
-            className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-500 hover:text-slate-100"
+            className="whitespace-nowrap rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-500 hover:text-slate-100"
           >
             ← Back
           </Link>
