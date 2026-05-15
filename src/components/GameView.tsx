@@ -3,8 +3,19 @@ import { fetchPlaylistTracks } from '../spotify/api'
 import type { GameTrack } from '../spotify/api'
 import { useGame } from '../game/useGame'
 import { useWakeLock } from '../game/useWakeLock'
-import { WHEEL_CATEGORIES } from '../game/wheel'
+import type { WheelCategory } from '../game/wheel'
+import {
+  GAME_MODES,
+  getGameMode,
+  type GameMode,
+  type GameModeId,
+} from '../game/modes'
+import {
+  fetchEurovisionData,
+  findEurovisionMatch,
+} from '../game/eurovision'
 import { usePlayback } from '../spotify/usePlayback'
+import type { UsePlayback } from '../spotify/usePlayback'
 import type { SpotifyDevice } from '../spotify/playback'
 import { Wheel } from './Wheel'
 import { RevealCard } from './RevealCard'
@@ -95,11 +106,114 @@ function Game({
   onExit: () => void
   onOpenBingo: () => void
 }) {
-  const game = useGame(tracks)
+  const [gameMode, setGameMode] = useState<GameModeId>('default')
+  const mode = getGameMode(gameMode)
   const playback = usePlayback()
+  const [hasStarted, setHasStarted] = useState(false)
+
+  // Eurovision-enriched track list. null until the fetch+match completes.
+  // Lives at this level so a stray re-mount of GameSession doesn't re-fetch.
+  const [enrichedTracks, setEnrichedTracks] = useState<GameTrack[] | null>(null)
+  const [enrichError, setEnrichError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (gameMode !== 'eurovision') {
+      setEnrichedTracks(null)
+      setEnrichError(null)
+      return
+    }
+    let cancelled = false
+    setEnrichError(null)
+    fetchEurovisionData()
+      .then((entries) => {
+        if (cancelled) return
+        setEnrichedTracks(
+          tracks.map((t) => ({
+            ...t,
+            eurovision: findEurovisionMatch(t.name, t.artists, entries),
+          })),
+        )
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        setEnrichError(err instanceof Error ? err.message : 'eurovision_fetch_failed')
+        // Fall back to "everything unmatched" so the game can still proceed.
+        setEnrichedTracks(tracks.map((t) => ({ ...t, eurovision: null })))
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [gameMode, tracks])
+
+  const eurovisionLoading =
+    gameMode === 'eurovision' && enrichedTracks === null && enrichError === null
+
+  if (!hasStarted) {
+    return (
+      <Shell>
+        <Header
+          playlistName={playlistName}
+          onExit={onExit}
+          onOpenBingo={onOpenBingo}
+          showBingo={false}
+        />
+        <div className="mt-10">
+          <ReadyView
+            totalTracks={tracks.length}
+            playback={playback}
+            gameMode={gameMode}
+            onGameModeChange={setGameMode}
+            eurovisionLoading={eurovisionLoading}
+            onStart={() => setHasStarted(true)}
+          />
+        </div>
+      </Shell>
+    )
+  }
+
+  const activeTracks =
+    gameMode === 'eurovision' && enrichedTracks ? enrichedTracks : tracks
+
+  return (
+    <GameSession
+      tracks={activeTracks}
+      mode={mode}
+      playback={playback}
+      playlistName={playlistName}
+      onExit={onExit}
+      onOpenBingo={onOpenBingo}
+    />
+  )
+}
+
+function GameSession({
+  tracks,
+  mode,
+  playback,
+  playlistName,
+  onExit,
+  onOpenBingo,
+}: {
+  tracks: GameTrack[]
+  mode: GameMode
+  playback: UsePlayback
+  playlistName: string
+  onExit: () => void
+  onOpenBingo: () => void
+}) {
+  const game = useGame(tracks, mode.categories.length)
   const [playError, setPlayError] = useState<string | null>(null)
   const [partyMode, setPartyMode] = useState(false)
   useWakeLock()
+
+  // The user already cleared the Start gateway at the parent level, so move
+  // straight into awaiting-spin on mount. We keep useGame's 'ready' state
+  // intact (it's just briefly visible for one render) rather than introduce
+  // a new initial kind.
+  useEffect(() => {
+    if (game.state.kind === 'ready') game.startGame()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (game.state.kind !== 'playing') return
@@ -139,17 +253,10 @@ function Game({
         />
 
         <div className="mt-10">
-          {game.state.kind === 'ready' && (
-            <ReadyView
-              totalTracks={game.totalTracks}
-              playback={playback}
-              onStart={game.startGame}
-            />
-          )}
-
           {(game.state.kind === 'awaiting-spin' ||
             game.state.kind === 'spinning') && (
             <RoundView
+              categories={mode.categories}
               targetIndex={
                 game.state.kind === 'spinning'
                   ? game.state.categoryIndex
@@ -169,6 +276,7 @@ function Game({
 
           {game.state.kind === 'playing' && (
             <PlayingView
+              categories={mode.categories}
               categoryIndex={game.state.categoryIndex}
               roundNumber={game.roundNumber}
               totalTracks={game.totalTracks}
@@ -179,6 +287,8 @@ function Game({
 
           {game.state.kind === 'revealing' && (
             <RevealingView
+              categories={mode.categories}
+              modeId={mode.id}
               categoryIndex={game.state.categoryIndex}
               track={game.state.track}
               roundNumber={game.roundNumber}
@@ -246,10 +356,16 @@ function Header({
 function ReadyView({
   totalTracks,
   playback,
+  gameMode,
+  onGameModeChange,
+  eurovisionLoading,
   onStart,
 }: {
   totalTracks: number
-  playback: ReturnType<typeof usePlayback>
+  playback: UsePlayback
+  gameMode: GameModeId
+  onGameModeChange: (id: GameModeId) => void
+  eurovisionLoading: boolean
   onStart: () => void
 }) {
   if (playback.status === 'loading') {
@@ -307,15 +423,30 @@ function ReadyView({
         />
       </div>
 
-      <p className="mx-auto mt-6 max-w-md rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
-        Heads up: The Spotify app on the device above will display the song's title,
-        artist and album art. Keep that screen out of sight during play!
-      </p>
+      <div className="mx-auto mt-8 max-w-md text-left">
+        <label className="mb-3 block text-xs uppercase tracking-wide text-slate-500">
+          Game mode
+        </label>
+        <select
+          value={gameMode}
+          onChange={(e) => onGameModeChange(e.target.value as GameModeId)}
+          className="w-full rounded-lg border border-slate-700 bg-slate-900/40 px-4 py-3 text-slate-100 transition hover:border-slate-500 focus:border-emerald-500 focus:outline-none"
+        >
+          {GAME_MODES.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+        {eurovisionLoading && (
+          <p className="mt-2 text-xs text-slate-400">Loading Eurovision data…</p>
+        )}
+      </div>
 
       <button
         type="button"
         onClick={onStart}
-        disabled={!playback.selectedDeviceId}
+        disabled={!playback.selectedDeviceId || eurovisionLoading}
         className="mt-8 rounded-full bg-emerald-500 px-10 py-4 text-lg font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Start game
@@ -392,6 +523,7 @@ function DevicePicker({
 }
 
 function RoundView({
+  categories,
   targetIndex,
   durationMs,
   roundNumber,
@@ -401,6 +533,7 @@ function RoundView({
   partyMode,
   onTogglePartyMode,
 }: {
+  categories: readonly WheelCategory[]
   targetIndex: number | null
   durationMs: number
   roundNumber: number
@@ -416,6 +549,7 @@ function RoundView({
       <RoundCounter roundNumber={roundNumber} totalTracks={totalTracks} />
       <div className="mt-6">
         <Wheel
+          categories={categories}
           targetIndex={targetIndex}
           durationMs={durationMs}
           onClick={isAwaiting ? onSpinNow : undefined}
@@ -442,19 +576,21 @@ function RoundView({
 }
 
 function PlayingView({
+  categories,
   categoryIndex,
   roundNumber,
   totalTracks,
   playError,
   onReveal,
 }: {
+  categories: readonly WheelCategory[]
   categoryIndex: number
   roundNumber: number
   totalTracks: number
   playError: string | null
   onReveal: () => void
 }) {
-  const category = WHEEL_CATEGORIES[categoryIndex]
+  const category = categories[categoryIndex]
   const color = category?.color ?? '#10b981'
   return (
     <div className="text-center">
@@ -502,19 +638,23 @@ function PlaybackError({ error }: { error: string }) {
 }
 
 function RevealingView({
+  categories,
+  modeId,
   categoryIndex,
   track,
   roundNumber,
   totalTracks,
   onContinue,
 }: {
+  categories: readonly WheelCategory[]
+  modeId: GameModeId
   categoryIndex: number
   track: GameTrack
   roundNumber: number
   totalTracks: number
   onContinue: () => void
 }) {
-  const category = WHEEL_CATEGORIES[categoryIndex]
+  const category = categories[categoryIndex]
   // Same color the segment shows on the wheel — when bop-it is on the wheel
   // animates, but party mode is auto-cleared on reveal so the static color
   // is always what the player just saw the wheel land on.
@@ -531,7 +671,7 @@ function RevealingView({
         </span>
       </div>
       <div className="mt-8">
-        <RevealCard track={track} />
+        <RevealCard track={track} modeId={modeId} />
       </div>
       <button
         type="button"

@@ -19,7 +19,7 @@ interface InternalState {
 
 type Action =
   | { type: 'start' }
-  | { type: 'spin_now' }
+  | { type: 'spin_now'; categoryCount: number }
   | { type: 'spin_complete' }
   | { type: 'reveal' }
   | { type: 'continue' }
@@ -37,7 +37,7 @@ function reducer(s: InternalState, action: Action): InternalState {
         ...s,
         game: {
           kind: 'spinning',
-          categoryIndex: pickCategoryIndex(),
+          categoryIndex: pickCategoryIndex(action.categoryCount),
           durationMs: pickSpinDurationMs(),
         },
       }
@@ -96,7 +96,7 @@ export interface UseGame {
   restart: () => void
 }
 
-export function useGame(initialTracks: GameTrack[]): UseGame {
+export function useGame(initialTracks: GameTrack[], categoryCount: number): UseGame {
   const [s, dispatch] = useReducer(
     reducer,
     initialTracks,
@@ -112,7 +112,7 @@ export function useGame(initialTracks: GameTrack[]): UseGame {
     totalTracks: s.tracks.length,
     roundNumber: s.index + 1,
     startGame: () => dispatch({ type: 'start' }),
-    spinNow: () => dispatch({ type: 'spin_now' }),
+    spinNow: () => dispatch({ type: 'spin_now', categoryCount }),
     onSpinComplete: () => dispatch({ type: 'spin_complete' }),
     reveal: () => dispatch({ type: 'reveal' }),
     continueRound: () => dispatch({ type: 'continue' }),

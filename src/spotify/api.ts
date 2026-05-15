@@ -1,3 +1,4 @@
+import type { EurovisionMatch } from '../game/eurovision'
 import { getAccessToken } from './auth'
 
 export interface SpotifyUser {
@@ -82,6 +83,9 @@ export interface GameTrack {
   artists: string[]
   year: number
   albumImage: string | null
+  // Eurovision enrichment: undefined in default mode, null when the track
+  // wasn't found in eurovision.json, object when matched.
+  eurovision?: EurovisionMatch | null
 }
 
 interface TrackPayload {

@@ -1,4 +1,11 @@
-export type CategoryId = 'artist' | 'title' | 'year-exact' | 'year-plusminus' | 'decade'
+export type CategoryId =
+  | 'artist'
+  | 'title'
+  | 'year-exact'
+  | 'year-plusminus'
+  | 'decade'
+  | 'country'
+  | 'placement'
 
 export interface WheelCategory {
   id: CategoryId
@@ -15,8 +22,8 @@ export const WHEEL_CATEGORIES: readonly WheelCategory[] = [
   { id: 'decade', label: 'Decade', short: 'Decade', color: '#a78bfa' },
 ] as const
 
-export function pickCategoryIndex(): number {
-  return Math.floor(Math.random() * WHEEL_CATEGORIES.length)
+export function pickCategoryIndex(count: number = WHEEL_CATEGORIES.length): number {
+  return Math.floor(Math.random() * count)
 }
 
 export function pickSpinDurationMs(): number {

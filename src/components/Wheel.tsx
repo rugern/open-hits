@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { WHEEL_CATEGORIES } from '../game/wheel'
+import type { WheelCategory } from '../game/wheel'
 import { scheduleSpinTicks } from '../game/sound'
 
-const SEGMENT_ANGLE = 360 / WHEEL_CATEGORIES.length
-const SEGMENT_HALF = SEGMENT_ANGLE / 2
 const SVG_SIZE = 320
 const CENTER = SVG_SIZE / 2
 const RADIUS = CENTER - 16
@@ -15,20 +13,25 @@ function polar(thetaDeg: number, r: number): [number, number] {
   return [CENTER + r * Math.sin(theta), CENTER - r * Math.cos(theta)]
 }
 
-function segmentPath(index: number): string {
-  const start = index * SEGMENT_ANGLE - SEGMENT_HALF
-  const end = index * SEGMENT_ANGLE + SEGMENT_HALF
+function segmentPath(index: number, segmentAngle: number): string {
+  const half = segmentAngle / 2
+  const start = index * segmentAngle - half
+  const end = index * segmentAngle + half
   const [x1, y1] = polar(start, RADIUS)
   const [x2, y2] = polar(end, RADIUS)
   return `M ${CENTER} ${CENTER} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${RADIUS} ${RADIUS} 0 0 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`
 }
 
 // Pointer is fixed at the top. Rotating the wheel by R degrees clockwise puts
-// segment N at the pointer when (N * SEGMENT_ANGLE + R) ≡ 0 (mod 360),
-// i.e. R ≡ (360 - N * SEGMENT_ANGLE) mod 360. We add 5 full spins on top so
+// segment N at the pointer when (N * segmentAngle + R) ≡ 0 (mod 360),
+// i.e. R ≡ (360 - N * segmentAngle) mod 360. We add 5 full spins on top so
 // the animation feels like a real wheel.
-function rotationForSegment(currentRotation: number, segmentIndex: number): number {
-  const targetMod = (360 - segmentIndex * SEGMENT_ANGLE) % 360
+function rotationForSegment(
+  currentRotation: number,
+  segmentIndex: number,
+  segmentAngle: number,
+): number {
+  const targetMod = (360 - segmentIndex * segmentAngle) % 360
   const currentMod = currentRotation % 360
   // Subtraction can go negative, so the +360 dance is still needed here.
   const angleDelta = (targetMod - currentMod + 360) % 360
@@ -36,6 +39,7 @@ function rotationForSegment(currentRotation: number, segmentIndex: number): numb
 }
 
 interface WheelProps {
+  categories: readonly WheelCategory[]
   // null = stationary (clickable, awaiting user); number = animate to that segment
   targetIndex: number | null
   durationMs: number
@@ -44,17 +48,19 @@ interface WheelProps {
 }
 
 export function Wheel({
+  categories,
   targetIndex,
   durationMs,
   onClick,
   onSpinComplete,
 }: WheelProps) {
+  const segmentAngle = 360 / categories.length
   // Pick a random starting category on mount so each game session begins
   // with a different segment under the pointer. Computed via the same formula
   // as rotationForSegment so the chosen segment is exactly centered.
   const [rotation, setRotation] = useState(() => {
-    const idx = Math.floor(Math.random() * WHEEL_CATEGORIES.length)
-    return (360 - idx * SEGMENT_ANGLE) % 360
+    const idx = Math.floor(Math.random() * categories.length)
+    return (360 - idx * segmentAngle) % 360
   })
   // Mirrors `rotation` so the effect below can read the current value
   // synchronously without putting `rotation` in its deps (which would
@@ -64,7 +70,7 @@ export function Wheel({
   useEffect(() => {
     if (targetIndex === null) return
 
-    const next = rotationForSegment(rotationRef.current, targetIndex)
+    const next = rotationForSegment(rotationRef.current, targetIndex, segmentAngle)
     const distance = next - rotationRef.current
 
     const cancelTicks = scheduleSpinTicks(durationMs, distance)
@@ -80,7 +86,7 @@ export function Wheel({
       cancelAnimationFrame(handle)
       cancelTicks()
     }
-  }, [targetIndex, durationMs])
+  }, [targetIndex, durationMs, segmentAngle])
 
   const isAnimating = targetIndex !== null
   const isClickable = !isAnimating && onClick !== undefined
@@ -125,12 +131,12 @@ export function Wheel({
         }}
         onTransitionEnd={isAnimating ? onSpinComplete : undefined}
       >
-        {WHEEL_CATEGORIES.map((cat, i) => {
-          const [lx, ly] = polar(i * SEGMENT_ANGLE, LABEL_RADIUS)
+        {categories.map((cat, i) => {
+          const [lx, ly] = polar(i * segmentAngle, LABEL_RADIUS)
           return (
             <g key={cat.id}>
               <path
-                d={segmentPath(i)}
+                d={segmentPath(i, segmentAngle)}
                 fill={cat.color}
                 stroke="rgb(15 23 42 / 0.6)"
                 strokeWidth={2}
