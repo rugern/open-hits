@@ -75,10 +75,13 @@ function reducer(s: InternalState, action: Action): InternalState {
       }
     }
     case 'restart': {
+      // Skip 'ready' — GameView's outer Game component owns the pre-game
+      // gateway, GameSession (the only consumer of this hook) doesn't render
+      // a 'ready' state. Drop straight into the spin loop.
       return {
         tracks: action.freshTracks,
         index: 0,
-        game: { kind: 'ready' },
+        game: { kind: 'awaiting-spin' },
       }
     }
   }
